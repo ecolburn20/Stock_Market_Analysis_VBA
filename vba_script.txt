@@ -1,0 +1,100 @@
+Sub clean_up()
+
+
+
+value_placement = 2
+
+For Each ws In Worksheets
+
+'setting headers for outputs
+ws.Range("O2").Value = "Greatest % Increase"
+ws.Range("O3").Value = "Greatest % Decrease"
+ws.Range("O4").Value = "Greatest Total Volume"
+ws.Range("P1").Value = "Ticker"
+ws.Range("Q1").Value = "Value"
+ws.Range("I1").Value = "Ticker"
+ws.Range("J1").Value = "Yearly Change"
+ws.Range("K1").Value = "Percent Change"
+ws.Range("L1").Value = "Total Stock Volume"
+
+'calculate last row used in column
+LastRow = ws.Cells(Rows.Count, 1).End(xlUp).Row
+
+
+'set counter for total stock volume to be summed, placeholder for ticker output, starting value for yearly change
+total_vol = 0
+ticker_placement = 2
+year_open = ws.Cells(2, 3).Value
+
+'loop through ticker column and look for change in stock name, sum volume for same ticker, calc yearly change and % change
+For i = 2 To LastRow
+
+ws.Cells(i, 11).Style = "Percent"
+total_vol = total_vol + ws.Cells(i, 7)
+    
+    If ws.Cells(i, 1) <> ws.Cells(i + 1, 1) Then
+        ws.Range("I" & ticker_placement).Value = ws.Cells(i, 1).Value
+        ws.Range("L" & ticker_placement).Value = total_vol
+        ws.Range("J" & ticker_placement).Value = ws.Cells(i, 6).Value - year_open
+        If year_open = 0 Then
+            ws.Range("K" & ticker_placement).Value = "N/A"
+        Else
+            ws.Range("K" & ticker_placement).Value = (ws.Cells(i, 6).Value - year_open) / year_open
+        End If
+        ticker_placement = ticker_placement + 1
+        year_open = ws.Cells(i + 1, 3).Value
+        total_vol = 0
+    End If
+    
+
+    
+Next i
+
+'conditional formatting
+SecondLastRow = ws.Cells(Rows.Count, 10).End(xlUp).Row
+For j = 2 To SecondLastRow
+
+    If ws.Cells(j, 10) > 0 Then
+        ws.Cells(j, 10).Interior.ColorIndex = 4
+    ElseIf ws.Cells(j, 10) < 0 Then
+        ws.Cells(j, 10).Interior.ColorIndex = 3
+    End If
+
+
+Next j
+
+
+
+'finding max percent change, min percent change, and greatest vol
+Dim Max_value, Min_value As Double
+Max_value = WorksheetFunction.Max(ws.Range("K2", "K" & SecondLastRow))
+Min_value = WorksheetFunction.Min(ws.Range("K2", "K" & SecondLastRow))
+Greatest_vol = WorksheetFunction.Max(ws.Range("L2", "L" & SecondLastRow))
+For k = 2 To SecondLastRow
+    If ws.Cells(k, 11) = Max_value Then
+        Ticker_max = ws.Cells(k, 9).Value
+    ElseIf ws.Cells(k, 11) = Min_value Then
+        Ticker_min = ws.Cells(k, 9).Value
+    End If
+    If ws.Cells(k, 12) = Greatest_vol Then
+        Ticker_vol = ws.Cells(k, 9).Value
+    End If
+Next k
+
+ws.Range("Q2").Value = Max_value
+ws.Range("Q3").Value = Min_value
+ws.Range("Q4").Value = Greatest_vol
+
+ws.Range("P2").Value = Ticker_max
+ws.Range("P3").Value = Ticker_min
+ws.Range("P4").Value = Ticker_vol
+ws.Range("Q2", "Q3").Style = "Percent"
+
+
+
+Next ws
+
+
+
+
+End Sub
